@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>webgame</title>
+
+</head>
+<body>
+	<div><canvas id="mycanvas"></canvas></div>
+	难度系数：<input type="range" id="difficultyRange" min="0" max="0.9" step="0.1" value="0.5"/><span id="difficulty"></span>
+	<br />分数：<span id="score"></span>
+	<div>当前速度是正常体型对应速度的<span id="scale"></span>倍。</div>
+
+		<script type="text/javascript">
+		var enemyNum = 20;
+		var growSpeed;
+		var canvasWidth = window.innerWidth*0.9;
+		var canvasHeight = window.innerHeight*0.9;
+		var canvas = document.getElementById("mycanvas");
+		var scale = 1;
+		var speedScale = 1.5;
+		var context = canvas.getContext('2d');
+		var hero;
+		var timeoutID = new Array();
+		var enemy = new Array(enemyNum);
+		var goodItem;
+		var isThereGoodItem = false;
+		var isThereBadItem = false;
+		var badItem;
+		var bombNum = 10;
+		var bomb = new Array(bombNum);
+		var moveLeft = false;
+		var moveUp = false;
+		var moveRight = false;
+		var moveDown = false;
+		function newEnemy(i)
+		{
+			var sz = (Math.random()*0.6+0.8)*hero.r;
+			var speed = 3+30/sz;
+			var degree = Math.random()*360;
+			var speedX = speed * Math.sin(degree);
+			var speedY = speed * Math.cos(degree);
+			switch(i%4)
+			{
+				case 0:
+				enemy[i] = new myCircle(-sz, Math.random()*canvas.height, sz, Math.abs(speedX), speedY, "red");
+				break;
+				case 1:
+				enemy[i] = new myCircle(Math.random()*canvas.width, -sz, sz, speedX, Math.abs(speedY), "red");
+				break;
+				case 2:
+				enemy[i] = new myCircle(canvas.width+sz, Math.random()*canvas.height, sz, -Math.abs(speedX), speedY, "red");
+				break;
+				case 3:
+				enemy[i] = new myCircle(Math.random()*canvas.width, canvas.height+sz, sz, speedX, -Math.abs(speedY), "red");
+				break;
+			}
+		}
+		function myItem(x,y,r,speedX,speedY,color)
+		{
+			this.x = x;
+			this.y = y;
+			this.r = r;
+			this.speedX = speedX;
+			this.speedY = speedY;
+			this.color = color;
+		}
+		function init()
+		{
+			for(var i = 0; i < timeoutID.length; ++i)
+			{
+				clearTimeout(timeoutID[i]);
+			}
+			moveLeft = false;
+			moveUp = false;
+			moveRight = false;
+			moveDown = false;
+			scale = 1;
+			score = 0;
+			hero = new myCircle(canvasWidth/2,canvasHeight/2,10,6,6,"blue");
+			canvas.height = canvasHeight;
+			canvas.width = canvasWidth;
+			context.clearRect(0,0,canvas.width,canvas.height);// 清空画布
+			context.strokeRect(0,0,canvas.width,canvas.height);
+			for(var i = 0; i < enemyNum; ++i)
+			{
+				newEnemy(i);
+			}
+			if(isThereGoodItem)
+			{
+				delete(goodItem);
+				isThereGoodItem = false;
+			}
+			if(isThereBadItem)
+			{
+				delete(BadItem);
+				isThereBadItem = false;
+			}
+		}
+		function drawCircle(c)
+		{
+			if (canvas == null) {
+			return false;
+			}
+			context.beginPath();
+			context.arc(c.x, c.y, c.r, 0, Math.PI * 2, true);
+			context.closePath();
+			context.fillStyle = c.color;
+			context.fill();
+		}
+		function drawGoodItem(item)
+		{
+			drawCircle(item);
+			context.fillStyle = "white";
+			context.fillRect(item.x-0.8*item.r,item.y-0.2*item.r,1.6*item.r,0.4*item.r);
+			context.fillRect(item.x-0.2*item.r,item.y-0.8*item.r,0.4*item.r,1.6*item.r);
+		}
+		function drawBadItem(item)
+		{
+			drawCircle(item);
+			context.fillStyle = "white";
+			context.fillRect(item.x-0.8*item.r,item.y-0.2*item.r,1.6*item.r,0.4*item.r);
+		}
+		function inside(c)
+		{
+			return (c.x >= -c.r) && (c.x <= canvas.width + c.r) && (c.y >= -c.r) && (c.y <= canvas.height + c.r);
+		}
+		function isCollided(c1,c2)
+		{
+			var distance = Math.sqrt((c1.x-c2.x)*(c1.x-c2.x)+(c1.y-c2.y)*(c1.y-c2.y));
+			if (distance <= c1.r+c2.r) return true;
+			else return false;
+		}
+		function myCircle(x,y,r,speedX,speedY,color)
+		{
+			this.x = x;
+			this.y = y;
+			this.r = r;
+			this.speedX = speedX;
+			this.speedY = speedY;
+			this.color = color;
+			this.grow = function(c){
+				scale = this.speedX / (3 + 30/this.r);
+				//this.r = Math.sqrt(this.r * this.r + c.r * c.r);
+				this.r = Math.sqrt(this.r * this.r + growSpeed * c.r * c.r);
+				this.speedX = scale*(3 + 30/this.r);
+				this.speedY = scale*(3 + 30/this.r);
+			}
+		}
+		function moveHero()
+		{
+			if(moveLeft) hero.x -= hero.speedX;
+			if(moveUp) hero.y -= hero.speedY;
+			if(moveRight) hero.x += hero.speedX;
+			if(moveDown) hero.y += hero.speedY;
+			if(hero.x < hero.r) hero.x = hero.r;
+			if(hero.x > canvas.width - hero.r) hero.x = canvas.width - hero.r;
+			if(hero.y < hero.r) hero.y = hero.r;
+			if(hero.y > canvas.height - hero.r) hero.y = canvas.height - hero.r;
+		}
+		function moveEnemy()
+		{
+			for(var i = 0; i < enemyNum; ++i)
+			{
+				enemy[i].x += enemy[i].speedX;
+				enemy[i].y += enemy[i].speedY;
+				if(!inside(enemy[i])){
+					delete(enemy[i]);
+					newEnemy(i);
+				}
+			}
+		}
+		function moveAndCreateItem()
+		{
+			if(isThereGoodItem)
+			{
+				goodItem.x += goodItem.speedX;
+				goodItem.y += goodItem.speedY;
+				drawGoodItem(goodItem);
+				if(!inside(goodItem))
+				{
+					delete(goodItem);
+					isThereGoodItem = false;
+				}
+			}
+			else if (Math.random()<0.01)
+			{
+				goodItem = new myItem(Math.random()*canvas.width,-15,15,Math.random()*12-6,Math.random()*6,"#8080FF");
+				isThereGoodItem = true;
+			}
+			if(isThereBadItem)
+			{
+				badItem.x += badItem.speedX;
+				badItem.y += badItem.speedY;
+				drawBadItem(badItem);
+				if(!inside(badItem))
+				{
+					delete(badItem);
+					isThereBadItem = false;
+				}
+			}
+			else if (Math.random()<0.01)
+			{
+				badItem = new myItem(Math.random()*canvas.width,-15,15,Math.random()*12-6,Math.random()*6,"#000080");
+				isThereBadItem = true;
+			}
+		}
+		function enemyCollision()
+		{
+			for(var i = 0; i < enemyNum; ++i)
+			{
+				if(isCollided(hero, enemy[i]))
+				{
+					if(hero.r > enemy[i].r)
+					{
+						hero.grow(enemy[i]);
+						delete(enemy[i]);
+						newEnemy(i);
+					}
+					else
+					{
+						delete(hero);
+						alert("gameover!");
+						init();
+						break;
+					}
+				}
+			}
+		}
+		function accelerate()
+		{
+			hero.speedX *= speedScale;
+			hero.speedY *= speedScale;
+			scale *= speedScale;
+		}
+		function decelerate()
+		{
+			hero.speedX /= speedScale;
+			hero.speedY /= speedScale;
+			scale /= speedScale;
+		}
+		function itemCollision()
+		{
+			if(isThereGoodItem && isCollided(hero,goodItem))
+			{
+				delete(goodItem);
+				isThereGoodItem = false;
+				accelerate();
+				timeoutID.push(setTimeout(function(){decelerate();timeoutID.shift();},10000));
+				
+			}
+			if(isThereBadItem && isCollided(hero,badItem))
+			{
+				delete(badItem);
+				isThereBadItem = false;
+				decelerate();
+				timeoutID.push(setTimeout(function(){accelerate();timeoutID.shift();},10000));
+			}
+		}
+		function drawCanvas()
+		{
+			document.getElementById("scale").innerHTML = scale;
+			document.getElementById("score").innerHTML = parseInt(10 * (hero.r * hero.r - 100));
+			growSpeed = 1 - document.getElementById("difficultyRange").value;
+			document.getElementById("difficulty").innerHTML = document.getElementById("difficultyRange").value * 10 + 1;
+			context.clearRect(0,0,canvas.width,canvas.height);// 清空画布
+			context.strokeRect(0,0,canvas.width,canvas.height);
+			moveHero();
+			moveEnemy();
+			moveAndCreateItem();
+			drawCircle(hero);
+			for(var i = 0; i < enemyNum; ++i)
+			{
+				drawCircle(enemy[i]);
+			}
+			enemyCollision();
+			itemCollision();
+		}
+		init();
+		setInterval(drawCanvas,20);
+		window.onload = function(){
+			document.onkeydown = function(event){
+				switch (event.keyCode)
+				{
+					case 37:
+					moveLeft = true;
+					break;
+					case 38:
+					moveUp = true;
+					break;
+					case 39:
+					moveRight = true;
+					break;
+					case 40:
+					moveDown = true;
+					break;
+				}
+			}
+			document.onkeyup = function(event){
+				switch (event.keyCode)
+				{
+					case 37:
+					moveLeft = false;
+					break;
+					case 38:
+					moveUp = false;
+					break;
+					case 39:
+					moveRight = false;
+					break;
+					case 40:
+					moveDown = false;
+					break;
+				}
+			}
+		}
+	</script>
+</body>
+</html>
