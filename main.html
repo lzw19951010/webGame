@@ -1,31 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-	<meta charset="UTF-8">
-	<title>webgame</title>
-
-</head>
-<body>
-	<div><canvas id="mycanvas"></canvas></div>
-	难度系数：<input type="range" id="difficultyRange" min="0" max="0.9" step="0.1" value="0.5"/><span id="difficulty"></span>
-	<br />分数：<span id="score"></span>
-	<div>当前速度是正常体型对应速度的<span id="scale"></span>倍。</div>
-
+	<head>
+		<meta charset="UTF-8">
+		<title>webgame</title>
+	</head>
+	<body>
+		<div><canvas id="mycanvas"></canvas></div>
+		难度系数：<input type="range" id="difficultyRange" min="0" max="0.9" step="0.1" value="0.5"/><span id="difficulty"></span>
+		<br />分数：<span id="score"></span>
+		<div>当前速度是正常体型对应速度的<span id="scale"></span>倍。</div>
+		<div id = "menu">返回主菜单</div>
 		<script type="text/javascript">
+		document.getElementById("menu").onclick = function()
+		{
+			window.location.href = "./index.html";
+		}
+		document.getElementById("menu").style.cursor = "pointer";
 		var enemyNum = 20;
 		var growSpeed;
 		var canvasWidth = window.innerWidth*0.9;
 		var canvasHeight = window.innerHeight*0.9;
 		var canvas = document.getElementById("mycanvas");
 		var scale = 1;
+		var score = 0;
 		var speedScale = 1.5;
 		var context = canvas.getContext('2d');
 		var hero;
 		var timeoutID = new Array();
 		var enemy = new Array(enemyNum);
 		var goodItem;
+		var boss;
 		var isThereGoodItem = false;
 		var isThereBadItem = false;
+		var isBossStage = false;
 		var badItem;
 		var bombNum = 10;
 		var bomb = new Array(bombNum);
@@ -37,7 +44,7 @@
 		{
 			var sz = (Math.random()*0.6+0.8)*hero.r;
 			var speed = 3+30/sz;
-			var degree = Math.random()*360;
+			var degree = Math.random()*2*Math.PI;
 			var speedX = speed * Math.sin(degree);
 			var speedY = speed * Math.cos(degree);
 			switch(i%4)
@@ -54,6 +61,35 @@
 				case 3:
 				enemy[i] = new myCircle(Math.random()*canvas.width, canvas.height+sz, sz, speedX, -Math.abs(speedY), "red");
 				break;
+			}
+		}
+		function createBomb(x,y)
+		{
+			var degree = 0;
+			for (var i = 0; i < bombNum; i++) {
+				var speedX = 6 * Math.sin(degree);
+				var speedY = 6 * Math.cos(degree);
+				bomb[i] = new myItem(x,y,10,speedX,speedY,"black");
+				degree += 2*Math.PI/bombNum;
+			}
+		}
+		function initBossStage()
+		{
+			isBossStage = true;
+			boss = new myItem(canvas.width / 2, 120, 100, Math.random()*2-1, Math.random()*2-1, "black");
+			hero.x = canvas.width / 2;
+			hero.y = canvas.width * 0.6;
+			hero.r = 10;
+			delete enemy;
+			enemyNum = 10;
+			enemy = new Array(enemyNum);
+			for(var i = 0; i < enemyNum; ++i)
+			{
+				newEnemy(i);
+			}
+			for(var i = 0; i < bombNum; ++i)
+			{
+				createBomb(boss.x, boss.y);
 			}
 		}
 		function myItem(x,y,r,speedX,speedY,color)
@@ -96,6 +132,7 @@
 				delete(BadItem);
 				isThereBadItem = false;
 			}
+			initBossStage();
 		}
 		function drawCircle(c)
 		{
@@ -121,6 +158,21 @@
 			context.fillStyle = "white";
 			context.fillRect(item.x-0.8*item.r,item.y-0.2*item.r,1.6*item.r,0.4*item.r);
 		}
+		function drawBoss()
+		{
+			drawCircle(boss);
+			context.fillStyle ="white";
+			context.beginPath();
+			context.moveTo(boss.x-0.6*boss.r,boss.y-0.6*boss.r);
+		    context.lineTo(boss.x-0.1*boss.r,boss.y-0.3*boss.r);
+		    context.lineTo(boss.x-0.3*boss.r,boss.y-0.1*boss.r);
+		    context.fill();
+	    	context.beginPath();
+	    	context.moveTo(boss.x+0.6*boss.r,boss.y-0.6*boss.r);
+		    context.lineTo(boss.x+0.1*boss.r,boss.y-0.3*boss.r);
+		    context.lineTo(boss.x+0.3*boss.r,boss.y-0.1*boss.r);
+	        context.fill();
+		}
 		function inside(c)
 		{
 			return (c.x >= -c.r) && (c.x <= canvas.width + c.r) && (c.y >= -c.r) && (c.y <= canvas.height + c.r);
@@ -145,6 +197,7 @@
 				this.r = Math.sqrt(this.r * this.r + growSpeed * c.r * c.r);
 				this.speedX = scale*(3 + 30/this.r);
 				this.speedY = scale*(3 + 30/this.r);
+				score += parseInt(100 * growSpeed * c.r * c.r);
 			}
 		}
 		function moveHero()
@@ -168,6 +221,27 @@
 					delete(enemy[i]);
 					newEnemy(i);
 				}
+			}
+		}
+		function moveBoss()
+		{
+			boss.x += boss.speedX;
+			boss.y += boss.speedY;
+			if(boss.x < boss.r) boss.speedX *= -1;
+			else if(boss.x > canvas.width - boss.r) boss.speedX *= -1;
+			if(boss.y < boss.r) boss.speedY *= -1;
+			else if(boss.y > canvas.height - boss.r) boss.speedY *= -1;
+		}
+		function moveBomb()
+		{
+			for(var i = 0; i < bombNum; ++i)
+			{
+				bomb[i].x += bomb[i].speedX;
+				bomb[i].y += bomb[i].speedY;
+				if(bomb[i].x < bomb[i].r) bomb[i].speedX *= -1;
+				else if(bomb[i].x > canvas.width - bomb[i].r) bomb[i].speedX *= -1;
+				if(bomb[i].y < bomb[i].r) bomb[i].speedY *= -1;
+				else if(bomb[i].y > canvas.height - bomb[i].r) bomb[i].speedY *= -1;
 			}
 		}
 		function moveAndCreateItem()
@@ -219,9 +293,7 @@
 					}
 					else
 					{
-						delete(hero);
-						alert("gameover!");
-						init();
+						gameOver();
 						break;
 					}
 				}
@@ -257,10 +329,48 @@
 				timeoutID.push(setTimeout(function(){accelerate();timeoutID.shift();},10000));
 			}
 		}
+		function win()
+		{
+			alert("Congratulations!");
+			init();
+		}
+		function gameOver()
+		{
+			delete(hero);
+			alert("Game over!");
+			init();
+		}
+		function bossCollision()
+		{
+			if (isCollided(hero,boss))
+			{
+				if(hero.r > boss.r)
+				{
+					hero.grow(boss);
+					delete(boss);
+					win();
+				}
+				else
+				{
+					gameOver();
+				}
+			}
+		}
+		function bombCollision()
+		{
+			for(var i = 0; i < bombNum; ++i)
+			{
+				if(isCollided(hero, bomb[i]))
+				{
+					gameOver();
+					break;
+				}
+			}
+		}
 		function drawCanvas()
 		{
 			document.getElementById("scale").innerHTML = scale;
-			document.getElementById("score").innerHTML = parseInt(10 * (hero.r * hero.r - 100));
+			document.getElementById("score").innerHTML = score;
 			growSpeed = 1 - document.getElementById("difficultyRange").value;
 			document.getElementById("difficulty").innerHTML = document.getElementById("difficultyRange").value * 10 + 1;
 			context.clearRect(0,0,canvas.width,canvas.height);// 清空画布
@@ -272,6 +382,22 @@
 			for(var i = 0; i < enemyNum; ++i)
 			{
 				drawCircle(enemy[i]);
+			}
+			if(isBossStage)
+			{
+				moveBoss();
+				moveBomb();
+				for(var i = 0; i < bombNum; ++i)
+				{
+					drawCircle(bomb[i]);
+				}
+				drawBoss();
+				bossCollision();
+				bombCollision();
+			if(!isBossStage && hero.r > 0.5*canvas.height)
+			{
+				initBossStage();
+			}
 			}
 			enemyCollision();
 			itemCollision();
@@ -314,6 +440,6 @@
 				}
 			}
 		}
-	</script>
-</body>
+		</script>
+	</body>
 </html>
