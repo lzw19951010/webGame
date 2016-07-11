@@ -6,11 +6,10 @@
 	</head>
 	<body>
 		<div><canvas id="mycanvas"></canvas></div>
-		难度系数：<input type="range" id="difficultyRange" min="0" max="0.9" step="0.1" value="0.5"/><span id="difficulty"></span>
-		<br />分数：<span id="score"></span>
-		<div>当前速度是正常体型对应速度的<span id="scale"></span>倍。</div>
-		<div id = "menu">返回主菜单</div>
+		难度系数：<input type="range" id="difficultyRange" min="0" max="0.9" step="0.1" value="0"/><span id="difficulty"></span>　　当前速度是正常体型对应速度的<span id="scale"></span>倍。
+		<br />分数：<span id="score"></span><span id="menu">返回主菜单</span>
 		<script type="text/javascript">
+		document.getElementById("menu").style = "float:right";
 		document.getElementById("menu").onclick = function()
 		{
 			window.location.href = "./index.html";
@@ -34,7 +33,7 @@
 		var isThereBadItem = false;
 		var isBossStage = false;
 		var badItem;
-		var bombNum = 10;
+		var bombNum = 5;
 		var bomb = new Array(bombNum);
 		var moveLeft = false;
 		var moveUp = false;
@@ -65,7 +64,7 @@
 		}
 		function createBomb(x,y)
 		{
-			var degree = 0;
+			var degree = Math.random()*2*Math.PI/bombNum;
 			for (var i = 0; i < bombNum; i++) {
 				var speedX = 6 * Math.sin(degree);
 				var speedY = 6 * Math.cos(degree);
@@ -75,11 +74,14 @@
 		}
 		function initBossStage()
 		{
+			alert("BOSS STAGE!");
 			isBossStage = true;
 			boss = new myItem(canvas.width / 2, 120, 100, Math.random()*2-1, Math.random()*2-1, "black");
 			hero.x = canvas.width / 2;
-			hero.y = canvas.width * 0.6;
+			hero.y = canvas.height * 0.7;
 			hero.r = 10;
+			hero.speedX = 6;
+			hero.speedY = 6;
 			delete enemy;
 			enemyNum = 10;
 			enemy = new Array(enemyNum);
@@ -91,6 +93,15 @@
 			{
 				createBomb(boss.x, boss.y);
 			}
+			for(var i = 0; i < timeoutID.length; ++i)
+			{
+				clearTimeout(timeoutID[i]);
+			}
+			moveLeft = false;
+			moveUp = false;
+			moveRight = false;
+			moveDown = false;
+			scale = 1;
 		}
 		function myItem(x,y,r,speedX,speedY,color)
 		{
@@ -103,6 +114,8 @@
 		}
 		function init()
 		{
+			isBossStage = false;
+			enemyNum = 20;
 			for(var i = 0; i < timeoutID.length; ++i)
 			{
 				clearTimeout(timeoutID[i]);
@@ -132,7 +145,6 @@
 				delete(BadItem);
 				isThereBadItem = false;
 			}
-			initBossStage();
 		}
 		function drawCircle(c)
 		{
@@ -197,7 +209,7 @@
 				this.r = Math.sqrt(this.r * this.r + growSpeed * c.r * c.r);
 				this.speedX = scale*(3 + 30/this.r);
 				this.speedY = scale*(3 + 30/this.r);
-				score += parseInt(100 * growSpeed * c.r * c.r);
+				score += parseInt(10 * growSpeed * c.r * c.r);
 			}
 		}
 		function moveHero()
@@ -394,10 +406,10 @@
 				drawBoss();
 				bossCollision();
 				bombCollision();
+			}
 			if(!isBossStage && hero.r > 0.5*canvas.height)
 			{
 				initBossStage();
-			}
 			}
 			enemyCollision();
 			itemCollision();
