@@ -8,13 +8,25 @@
 		<div><canvas id="mycanvas"></canvas></div>
 		难度系数：<input type="range" id="difficultyRange" min="0" max="0.9" step="0.1" value="0"/><span id="difficulty"></span>　　当前速度是正常体型对应速度的<span id="scale"></span>倍。
 		<br />分数：<span id="score"></span><span id="menu">返回主菜单</span>
+		<div id = "notification"></div>
+		<audio id="bgMusic">
+			<source type="audio/mp3">
+		</audio>
+		<style>
+		#notification{
+
+		}
+		</style>
 		<script type="text/javascript">
+		var audio = document.getElementById("bgMusic");
+
 		document.getElementById("menu").style = "float:right";
 		document.getElementById("menu").onclick = function()
 		{
 			window.location.href = "./index.html";
 		}
 		document.getElementById("menu").style.cursor = "pointer";
+		var notification = document.getElementById("notification");
 		var enemyNum = 20;
 		var growSpeed;
 		var canvasWidth = window.innerWidth*0.9;
@@ -26,6 +38,7 @@
 		var context = canvas.getContext('2d');
 		var hero;
 		var timeoutID = new Array();
+		var timeIntervalID;
 		var enemy = new Array(enemyNum);
 		var goodItem;
 		var boss;
@@ -74,9 +87,8 @@
 		}
 		function initBossStage()
 		{
-			alert("BOSS STAGE!");
 			isBossStage = true;
-			boss = new myItem(canvas.width / 2, 120, 100, Math.random()*2-1, Math.random()*2-1, "black");
+			boss = new myItem(canvas.width / 2, 120, 10, Math.random()*2-1, Math.random()*2-1, "black");
 			hero.x = canvas.width / 2;
 			hero.y = canvas.height * 0.7;
 			hero.r = 10;
@@ -112,8 +124,27 @@
 			this.speedY = speedY;
 			this.color = color;
 		}
+		function gameNotification(str, func)
+		{
+			notification.innerHTML = str;
+			notification.style.display = "block";
+			notification.style.position = "absolute";
+			notification.style.top = (canvas.height / 2 - 100)+ 'px';
+			notification.style.left = (canvas.width / 2 - 300)+ 'px';
+			notification.style.fontSize = '100px';
+			notification.style.color = "#800000";
+			notification.style.cursor = "pointer";
+			context.clearRect(0,0,canvas.width,canvas.height);// 清空画布
+			if(typeof(timeIntervalID) != "undefined") clearInterval(timeIntervalID);
+			notification.onclick = func;
+		}
 		function init()
 		{
+			canvas.style.display = "inline";
+			notification.style.display = "none";
+			audio.loop = true;
+			audio.src = "./bgm.mp3";
+			audio.play();
 			isBossStage = false;
 			enemyNum = 20;
 			for(var i = 0; i < timeoutID.length; ++i)
@@ -145,6 +176,8 @@
 				delete(BadItem);
 				isThereBadItem = false;
 			}
+			if(typeof(timeIntervalID) != "undefined") clearInterval(timeIntervalID);
+			timeIntervalID = setInterval(drawCanvas,20);
 		}
 		function drawCircle(c)
 		{
@@ -176,14 +209,14 @@
 			context.fillStyle ="white";
 			context.beginPath();
 			context.moveTo(boss.x-0.6*boss.r,boss.y-0.6*boss.r);
-		    context.lineTo(boss.x-0.1*boss.r,boss.y-0.3*boss.r);
-		    context.lineTo(boss.x-0.3*boss.r,boss.y-0.1*boss.r);
-		    context.fill();
-	    	context.beginPath();
-	    	context.moveTo(boss.x+0.6*boss.r,boss.y-0.6*boss.r);
-		    context.lineTo(boss.x+0.1*boss.r,boss.y-0.3*boss.r);
-		    context.lineTo(boss.x+0.3*boss.r,boss.y-0.1*boss.r);
-	        context.fill();
+			context.lineTo(boss.x-0.1*boss.r,boss.y-0.3*boss.r);
+			context.lineTo(boss.x-0.3*boss.r,boss.y-0.1*boss.r);
+			context.fill();
+			context.beginPath();
+			context.moveTo(boss.x+0.6*boss.r,boss.y-0.6*boss.r);
+			context.lineTo(boss.x+0.1*boss.r,boss.y-0.3*boss.r);
+			context.lineTo(boss.x+0.3*boss.r,boss.y-0.1*boss.r);
+			context.fill();
 		}
 		function inside(c)
 		{
@@ -341,16 +374,32 @@
 				timeoutID.push(setTimeout(function(){accelerate();timeoutID.shift();},10000));
 			}
 		}
+		function bossWarning()
+		{
+			audio.src = './warning.mp3';
+			audio.currentTime = 0;
+			audio.play();
+			gameNotification("BOSS STAGE!<br />Click to continue",function(){
+				initBossStage();
+				timeIntervalID = setInterval(drawCanvas,20);
+				notification.style.display = "none";
+			});
+		}
 		function win()
 		{
-			alert("Congratulations!");
-			init();
+			audio.src = './win.mp3';
+			audio.currentTime = 0;
+			audio.loop = false;
+			audio.play();
+			gameNotification("Congratulations!<br />You just won!<br />Click to retry", init);
 		}
 		function gameOver()
 		{
 			delete(hero);
-			alert("Game over!");
-			init();
+			audio.src = './gameover.mp3';
+			audio.currentTime = 0;
+			audio.play();
+			gameNotification("Game Over!<br />Click to retry",init);
 		}
 		function bossCollision()
 		{
@@ -407,15 +456,14 @@
 				bossCollision();
 				bombCollision();
 			}
-			if(!isBossStage && hero.r > 0.5*canvas.height)
+			if(!isBossStage && hero.r > 0.4*canvas.height)
 			{
-				initBossStage();
+				bossWarning();
 			}
 			enemyCollision();
 			itemCollision();
 		}
 		init();
-		setInterval(drawCanvas,20);
 		window.onload = function(){
 			document.onkeydown = function(event){
 				switch (event.keyCode)
