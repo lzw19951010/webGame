@@ -5,37 +5,82 @@
 		<title>webgame</title>
 	</head>
 	<body>
+		<div id = "start">开始游戏</div>
+		<div id = "introduction">游戏介绍：按方向键控制移动蓝色主角，可以吞食比你小的红色敌人，黑色敌人是炸弹，不可吞食。<br/>普通模式下生长到一定大小即可通过，boss模式下吞食掉boss即可通过。</div>
+		<div id = "difficultyDiv">难度系数：<span id="diffDown">←</span> <span id = "difficulty"></span> <span id="diffUp">→</span></div>
+		<div id = "bossStage">clicktoboss</div>
 		<div><canvas id="mycanvas"></canvas></div>
-		难度系数：<input type="range" id="difficultyRange" min="0" max="0.9" step="0.1" value="0"/><span id="difficulty"></span>　　当前速度是正常体型对应速度的<span id="scale"></span>倍。
-		<br />分数：<span id="score"></span><span id="menu">返回主菜单</span>
+		<div id="scaleDiv">当前速度是正常体型对应速度的<span id="scale"></span>倍。</div>
+		<div id="backtomenu">【返回主菜单】</div>
 		<div id = "notification"></div>
 		<audio id="bgMusic">
 			<source type="audio/mp3">
 		</audio>
 		<style>
+		#start{
+			margin-left: 37%;
+			margin-top: 10%;
+			font: 80px 'STXihei', sans-serif;
+			cursor: pointer;
+		}
+		#introduction{
+			margin-left: 20%;
+			margin-right: 20%;
+			margin-top: 5%;
+			font: 40px 'STXihei', sans-serif;
+		}
+		#difficultyDiv{
+			margin-left: 37%;
+			margin-top: 5%;
+			font: 40px 'STXihei', sans-serif;
+		}
+		#bossStage{
+			position: absolute;
+			top: 0px;
+			right: 0px;
+			color: white;
+			cursor: pointer;
+		}
 		#notification{
-
+			position: absolute;
+			font-size: 100px;
+			color: black;
+			cursor: pointer;
+		}
+		#diffUp{
+			background-color: black;
+			color: white;
+			font-size: 30px;
+			cursor: pointer;
+		}
+		#diffDown{
+			background-color: black;
+			color: white;
+			font-size: 30px;
+			cursor: pointer;
 		}
 		</style>
 		<script type="text/javascript">
+		var menuDiv = document.getElementById("backtomenu");
+		var startDiv = document.getElementById("start");
+		var introductionDiv = document.getElementById("introduction");
+		var canvas = document.getElementById("mycanvas");
 		var audio = document.getElementById("bgMusic");
-
-		document.getElementById("menu").style = "float:right";
-		document.getElementById("menu").onclick = function()
-		{
-			window.location.href = "./index.html";
-		}
-		document.getElementById("menu").style.cursor = "pointer";
-		document.getElementById("menu").style.cursor = "pointer";
 		var notification = document.getElementById("notification");
-		var difficulty = 1;
+		var difficultyDiv = document.getElementById("difficultyDiv");
+		var scaleDiv = document.getElementById("scaleDiv");
+		var bossDiv = document.getElementById("bossStage");
+		bossDiv.onclick = function()
+		{
+			init();
+			bossWarning();
+		}
+		menuDiv.style.cursor = "pointer";
 		var enemyNum = 20;
 		var growSpeed;
 		var canvasWidth = window.innerWidth*0.9;
 		var canvasHeight = window.innerHeight*0.9;
-		var canvas = document.getElementById("mycanvas");
 		var scale = 1;
-		var score = 0;
 		var speedScale = 1.5;
 		var context = canvas.getContext('2d');
 		var hero;
@@ -54,6 +99,8 @@
 		var moveUp = false;
 		var moveRight = false;
 		var moveDown = false;
+		var difficulty = 1;
+		mainMenu();
 		function newEnemy(i)
 		{
 			var seed = Math.random();
@@ -98,7 +145,7 @@
 			var degree = Math.random()*2*Math.PI;
 			var speedX = speed * Math.sin(degree);
 			var speedY = speed * Math.cos(degree);
-			boss = new myItem(canvas.width / 2, 120, 40+difficulty*6, speedX, speedY, "black");
+			boss = new myItem(canvas.width / 2, 120, 32+difficulty*8, speedX, speedY, "#800000");
 			hero.x = canvas.width / 2;
 			hero.y = canvas.height * 0.7;
 			hero.r = 10;
@@ -139,22 +186,49 @@
 		{
 			notification.innerHTML = str;
 			notification.style.display = "block";
-			notification.style.position = "absolute";
-			notification.style.top = (canvas.height / 2 - 100)+ 'px';
-			notification.style.left = (canvas.width / 2 - 300)+ 'px';
-			notification.style.fontSize = '100px';
-			notification.style.color = "#800000";
-			notification.style.cursor = "pointer";
+			notification.style.top = '25%';
+			notification.style.left = '30%';
 			context.clearRect(0,0,canvas.width,canvas.height);// 清空画布
 			if(typeof(timeIntervalID) != "undefined") clearInterval(timeIntervalID);
 			notification.onclick = func;
 		}
+		function mainMenu()
+		{
+			audio.pause();
+			if(typeof(timeIntervalID) != "undefined") clearInterval(timeIntervalID);
+			difficultyDiv.style.display = "block";
+			startDiv.style.display = "block";
+			introductionDiv.style.display = "block";
+			canvas.style.display = "none";
+			menuDiv.style.display = "none";
+			scaleDiv.style.display = "none";
+			notification.style.display = "none";
+			document.getElementById("difficulty").innerHTML = difficulty;
+			document.getElementById("diffUp").onclick = function()
+			{
+				difficulty = (difficulty >= 10)?10:(difficulty+1);
+				document.getElementById("difficulty").innerHTML = difficulty;
+			}
+			document.getElementById("diffDown").onclick = function()
+			{
+				difficulty = (difficulty <= 1)?1:(difficulty-1);
+				document.getElementById("difficulty").innerHTML = difficulty;
+			}
+		}
+		function startGame()
+		{
+			menuDiv.style.display = "block";
+			introductionDiv.style.display = "none";
+			startDiv.style.display = "none";
+			difficultyDiv.style.display = "none";
+			canvas.style.display = "block";
+			notification.style.display = "none";
+			scaleDiv.style.display = "block";
+		}
 		function init()
 		{
-			difficulty = document.getElementById("difficultyRange").value * 10 + 1;
+			startGame();
 			growSpeed = 1.1 - difficulty / 10;
-			canvas.style.display = "inline";
-			notification.style.display = "none";
 			audio.loop = true;
 			audio.src = "./bgm.mp3";
 			audio.play();
@@ -169,7 +243,6 @@
 			moveRight = false;
 			moveDown = false;
 			scale = 1;
-			score = 0;
 			hero = new myCircle(canvasWidth/2,canvasHeight/2,10,6,6,"blue");
 			canvas.height = canvasHeight;
 			canvas.width = canvasWidth;
@@ -255,7 +328,6 @@
 				this.r = Math.sqrt(this.r * this.r + growSpeed * c.r * c.r);
 				this.speedX = scale*(3 + 105/(this.r+25));
 				this.speedY = scale*(3 + 105/(this.r+25));
-				score += parseInt((growSpeed+0.05) * c.r * c.r);
 			}
 		}
 		function moveHero()
@@ -420,7 +492,7 @@
 			audio.src = './warning.mp3';
 			audio.currentTime = 0;
 			audio.play();
-			gameNotification("BOSS STAGE!<br />Click to continue",function(){
+			gameNotification("BOSS STAGE!<br />click to continue",function(){
 				initBossStage();
 				timeIntervalID = setInterval(drawCanvas,20);
 				notification.style.display = "none";
@@ -432,7 +504,7 @@
 			audio.currentTime = 0;
 			audio.loop = false;
 			audio.play();
-			gameNotification("Congratulations!<br />You just won!<br />Click to retry", init);
+			gameNotification("CONGRATULATION!<br />You just won!<br />click to retry", init);
 		}
 		function gameOver()
 		{
@@ -440,7 +512,7 @@
 			audio.src = './gameover.mp3';
 			audio.currentTime = 0;
 			audio.play();
-			gameNotification("Game Over!<br />Click to retry",init);
+			gameNotification("GAME OVER!<br />click to retry",init);
 		}
 		function bossCollision()
 		{
@@ -472,8 +544,6 @@
 		function drawCanvas()
 		{
 			document.getElementById("scale").innerHTML = scale;
-			document.getElementById("score").innerHTML = score;
-			document.getElementById("difficulty").innerHTML = difficulty;
 			context.clearRect(0,0,canvas.width,canvas.height);// 清空画布
 			context.strokeRect(0,0,canvas.width,canvas.height);
 			moveHero();
@@ -503,7 +573,14 @@
 			enemyCollision();
 			itemCollision();
 		}
-		init();
+		startDiv.onclick = function()
+		{
+			init();
+		}
+		menuDiv.onclick = function()
+		{
+			mainMenu();
+		}
 		window.onload = function(){
 			document.onkeydown = function(event){
 				switch (event.keyCode)
