@@ -58,8 +58,9 @@
 		{
 			var seed = Math.random();
 			var sz = hero.r;
-			if(seed < 0.3) sz *= 0.4 + 2 * seed;
-			else sz *= (3 * seed + 6.1)/ 7;
+			var p = 0.45 - 0.025 * difficulty;
+			if(seed < p) sz *= 0.4 + 0.6 * seed / p;
+			else sz *= 0.3*(seed-p)/(1-p) + 1;
 			var speed = 2 + 240/(sz+50);
 			var degree = Math.random()*2*Math.PI;
 			var speedX = speed * Math.sin(degree);
@@ -93,7 +94,11 @@
 		function initBossStage()
 		{
 			isBossStage = true;
-			boss = new myItem(canvas.width / 2, 120, 30+difficulty*10, Math.random()*2-1, Math.random()*2-1, "black");
+			var speed = parseInt(difficulty/2)+1;
+			var degree = Math.random()*2*Math.PI;
+			var speedX = speed * Math.sin(degree);
+			var speedY = speed * Math.cos(degree);
+			boss = new myItem(canvas.width / 2, 120, 40+difficulty*6, speedX, speedY, "black");
 			hero.x = canvas.width / 2;
 			hero.y = canvas.height * 0.7;
 			hero.r = 10;
@@ -146,6 +151,8 @@
 		}
 		function init()
 		{
+			difficulty = document.getElementById("difficultyRange").value * 10 + 1;
+			growSpeed = 1.1 - difficulty / 10;
 			canvas.style.display = "inline";
 			notification.style.display = "none";
 			audio.loop = true;
@@ -466,8 +473,6 @@
 		{
 			document.getElementById("scale").innerHTML = scale;
 			document.getElementById("score").innerHTML = score;
-			difficulty = document.getElementById("difficultyRange").value * 10 + 1;
-			growSpeed = 1 - document.getElementById("difficultyRange").value;
 			document.getElementById("difficulty").innerHTML = difficulty;
 			context.clearRect(0,0,canvas.width,canvas.height);// 清空画布
 			context.strokeRect(0,0,canvas.width,canvas.height);
