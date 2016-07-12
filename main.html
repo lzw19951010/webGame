@@ -27,6 +27,7 @@
 		}
 		document.getElementById("menu").style.cursor = "pointer";
 		var notification = document.getElementById("notification");
+		var difficulty = 1;
 		var enemyNum = 20;
 		var growSpeed;
 		var canvasWidth = window.innerWidth*0.9;
@@ -54,8 +55,11 @@
 		var moveDown = false;
 		function newEnemy(i)
 		{
-			var sz = (Math.random()*0.6+0.8)*hero.r;
-			var speed = 3+30/sz;
+			var seed = Math.random();
+			var sz = hero.r;
+			if(seed < 0.3) sz *= 0.4 + 2 * seed;
+			else sz *= (3 * seed + 6.1)/ 7;
+			var speed = 2 + 240/(sz+50);
 			var degree = Math.random()*2*Math.PI;
 			var speedX = speed * Math.sin(degree);
 			var speedY = speed * Math.cos(degree);
@@ -88,7 +92,7 @@
 		function initBossStage()
 		{
 			isBossStage = true;
-			boss = new myItem(canvas.width / 2, 120, 10, Math.random()*2-1, Math.random()*2-1, "black");
+			boss = new myItem(canvas.width / 2, 120, 30+difficulty*10, Math.random()*2-1, Math.random()*2-1, "black");
 			hero.x = canvas.width / 2;
 			hero.y = canvas.height * 0.7;
 			hero.r = 10;
@@ -237,12 +241,12 @@
 			this.speedY = speedY;
 			this.color = color;
 			this.grow = function(c){
-				scale = this.speedX / (3 + 30/this.r);
+				scale = this.speedX / (3 + 105/(this.r+25));
 				//this.r = Math.sqrt(this.r * this.r + c.r * c.r);
 				this.r = Math.sqrt(this.r * this.r + growSpeed * c.r * c.r);
-				this.speedX = scale*(3 + 30/this.r);
-				this.speedY = scale*(3 + 30/this.r);
-				score += parseInt(10 * growSpeed * c.r * c.r);
+				this.speedX = scale*(3 + 105/(this.r+25));
+				this.speedY = scale*(3 + 105/(this.r+25));
+				score += parseInt((growSpeed+0.05) * c.r * c.r);
 			}
 		}
 		function moveHero()
@@ -304,7 +308,21 @@
 			}
 			else if (Math.random()<0.01)
 			{
-				goodItem = new myItem(Math.random()*canvas.width,-15,15,Math.random()*12-6,Math.random()*6,"#8080FF");
+				switch(parseInt(Math.random()*4))
+				{
+				case 0:
+					goodItem = new myItem(-15,Math.random()*canvas.height,15,Math.random()*6,Math.random()*12-6,"#8080FF");
+					break;
+				case 1:
+					goodItem = new myItem(Math.random()*canvas.width,-15,15,Math.random()*12-6,Math.random()*6,"#8080FF");
+					break;
+				case 2:
+					goodItem = new myItem(canvas.width+15,Math.random()*canvas.height,15,-Math.random()*6,Math.random()*12-6,"#8080FF");
+					break;
+				case 3:
+					goodItem = new myItem(Math.random()*canvas.width,canvas.height+15,15,Math.random()*12-6,-Math.random()*6,"#8080FF");
+					break;
+				}
 				isThereGoodItem = true;
 			}
 			if(isThereBadItem)
@@ -320,7 +338,21 @@
 			}
 			else if (Math.random()<0.01)
 			{
-				badItem = new myItem(Math.random()*canvas.width,-15,15,Math.random()*12-6,Math.random()*6,"#000080");
+				switch(parseInt(Math.random()*4))
+				{
+				case 0:
+					badItem = new myItem(-15,Math.random()*canvas.height,15,Math.random()*6,Math.random()*12-6,"#000080");
+					break;
+				case 1:
+					badItem = new myItem(Math.random()*canvas.width,-15,15,Math.random()*12-6,Math.random()*6,"#000080");
+					break;
+				case 2:
+					badItem = new myItem(canvas.width+15,Math.random()*canvas.height,15,-Math.random()*6,Math.random()*12-6,"#000080");
+					break;
+				case 3:
+					badItem = new myItem(Math.random()*canvas.width,canvas.height+15,15,Math.random()*12-6,-Math.random()*6,"#000080");
+					break;
+				}
 				isThereBadItem = true;
 			}
 		}
@@ -432,8 +464,9 @@
 		{
 			document.getElementById("scale").innerHTML = scale;
 			document.getElementById("score").innerHTML = score;
+			difficulty = document.getElementById("difficultyRange").value * 10 + 1;
 			growSpeed = 1 - document.getElementById("difficultyRange").value;
-			document.getElementById("difficulty").innerHTML = document.getElementById("difficultyRange").value * 10 + 1;
+			document.getElementById("difficulty").innerHTML = difficulty;
 			context.clearRect(0,0,canvas.width,canvas.height);// 清空画布
 			context.strokeRect(0,0,canvas.width,canvas.height);
 			moveHero();
