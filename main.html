@@ -26,6 +26,7 @@
 			window.location.href = "./index.html";
 		}
 		document.getElementById("menu").style.cursor = "pointer";
+		document.getElementById("menu").style.cursor = "pointer";
 		var notification = document.getElementById("notification");
 		var difficulty = 1;
 		var enemyNum = 20;
@@ -99,12 +100,13 @@
 			hero.speedX = 6;
 			hero.speedY = 6;
 			delete enemy;
-			enemyNum = 10;
+			enemyNum = parseInt(difficulty / 2) + 9;
 			enemy = new Array(enemyNum);
 			for(var i = 0; i < enemyNum; ++i)
 			{
 				newEnemy(i);
 			}
+			bombNum = parseInt(difficulty / 2) + 4;
 			for(var i = 0; i < bombNum; ++i)
 			{
 				createBomb(boss.x, boss.y);
@@ -150,7 +152,7 @@
 			audio.src = "./bgm.mp3";
 			audio.play();
 			isBossStage = false;
-			enemyNum = 20;
+			enemyNum = difficulty + 14;
 			for(var i = 0; i < timeoutID.length; ++i)
 			{
 				clearTimeout(timeoutID[i]);
