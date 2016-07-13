@@ -1,0 +1,47 @@
+#start{
+	margin-left: 37%;
+	margin-top: 5%;
+	font: 80px 'STXihei', sans-serif;
+	cursor: pointer;
+}
+#introduction{
+	margin-left: 20%;
+	margin-right: 20%;
+	margin-top: 2%;
+	font: 40px 'STXihei', sans-serif;
+}
+#difficultyDiv{
+	margin-left: 37%;
+	margin-top: 2%;
+	font: 40px 'STXihei', sans-serif;
+}
+#bossStage{
+	position: absolute;
+	top: 0px;
+	right: 0px;
+	color: white;
+	cursor: pointer;
+}
+#notification{
+	position: absolute;
+	font-size: 80px;
+	top: 10%;
+	left: 25%;
+	color: black;
+	cursor: pointer;
+}
+#diffUp{
+	background-color: black;
+	color: white;
+	font-size: 30px;
+	cursor: pointer;
+}
+#diffDown{
+	background-color: black;
+	color: white;
+	font-size: 30px;
+	cursor: pointer;
+}
+#backToMenu{
+	cursor: pointer;
+}

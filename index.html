@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title>webgame</title>
+		<link rel="stylesheet" href="./src/webgame.css">
+	</head>
+	<body>
+		<div id = "start">开始游戏</div>
+		<div id = "introduction">游戏介绍：按方向键控制移动蓝色主角，吞食比你小的红点，躲避比你大的红点。黑点是炸弹，不可吞食。
+		<br/>普通模式下生长到一定大小即可通过，boss模式下吞食掉boss即可通过。
+		<br/>加号道具加速为1.5倍，减号道具减速为2/3倍，时效都是10秒，效果可叠加。
+		</div>
+		<div id = "difficultyDiv">难度系数：<span id="diffDown">←</span> <span id = "difficulty"></span> <span id="diffUp">→</span></div>
+		<div id = "bossStage">clicktoboss</div>
+		<div><canvas id="myCanvas"></canvas></div>
+		<div id="scaleDiv">主角半径为<span id="size"></span>，当前速度是正常体型对应速度的<span id="scale"></span>倍。</div>
+		<div id="backToMenu">【返回主菜单】</div>
+		<div id = "notification"></div>
+		<audio id="bgMusic">
+			<source type="audio/mp3">
+		</audio>
+	</body>
+	<script language="javascript" src="./src/webgame.js"></script>
+</html>
